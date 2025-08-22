@@ -157,7 +157,6 @@ class AsyncFBClient(AsyncClientProtocol):
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self.STYLES_URL,
-                headers=self.AUTH_HEADERS,
             ) as response:
                 if response.status != HTTPStatus.OK:
                     msg = (

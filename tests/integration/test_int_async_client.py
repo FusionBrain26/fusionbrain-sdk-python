@@ -79,4 +79,5 @@ async def test_wait_for_completion(async_client, pipeline):
 async def test_get_styles(async_client):
     got = await async_client.get_styles()
     assert isinstance(got, list)
+    assert got
     assert all(isinstance(style, Style) for style in got)

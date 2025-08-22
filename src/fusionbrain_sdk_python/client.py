@@ -128,7 +128,6 @@ class FBClient(SyncClientProtocol):
     def get_styles(self) -> List[Style]:
         response = self.session.get(
             self.STYLES_URL,
-            headers=self.AUTH_HEADERS,
         )
         if response.status_code != HTTPStatus.OK:
             msg = (
