@@ -8,12 +8,16 @@ from fusionbrain_sdk_python.models import Pipeline, PipelineResult, PipelineStat
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
+    monkeypatch.setenv('FB_API_KEY', 'FB_API_KEY')
+    monkeypatch.setenv('FB_API_SECRET', 'FB_API_SECRET')
     return FBClient()
 
 
 @pytest_asyncio.fixture
-def async_client():
+def async_client(monkeypatch):
+    monkeypatch.setenv('FB_API_KEY', 'FB_API_KEY')
+    monkeypatch.setenv('FB_API_SECRET', 'FB_API_SECRET')
     return AsyncFBClient()
 
 

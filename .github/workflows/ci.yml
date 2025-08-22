@@ -108,7 +108,6 @@ jobs:
       - name: Run integration tests
         run: |
           source .venv/bin/activate
-          python -c "import os;print('FB_API_KEY present:', bool(os.getenv('FB_API_KEY')));print('FB_API_SECRET present:', bool(os.getenv('FB_API_SECRET')))"
           pytest -m int -v
 
   build:
