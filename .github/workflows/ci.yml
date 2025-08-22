@@ -55,6 +55,7 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
+    environment: Integration tests
     strategy:
       fail-fast: false
       matrix:
@@ -70,10 +71,25 @@ jobs:
       - name: Run unit tests
         run: |
           source .venv/bin/activate
-          pytest -m "not int" -v
+          pytest -m "not int" \
+                 --cov=src/fusionbrain_sdk_python \
+                 --cov-report=term:skip-covered \
+                 --cov-report=xml \
+                 -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: pytest
+          name: codecov-coverage
+          fail_ci_if_error: false
+          verbose: true
 
   integration-tests:
     runs-on: ubuntu-latest
+    environment: Integration tests
     strategy:
       fail-fast: false
       matrix:
