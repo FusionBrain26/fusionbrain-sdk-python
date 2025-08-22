@@ -1,6 +1,7 @@
 # FusionBrain SDK for Python
 
 [![codecov](https://codecov.io/github/FusionBrain26/fusionbrain-sdk-python/graph/badge.svg?token=OR5CTTH4X4)](https://codecov.io/github/FusionBrain26/fusionbrain-sdk-python)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 This SDK provides a convenient way to interact with the FusionBrain API for generating images and other content. It includes both synchronous and asynchronous clients to suit different programming needs.
 
