@@ -6,6 +6,7 @@ from typing import List, Optional, Union
 from uuid import UUID
 
 import aiohttp
+from dotenv import load_dotenv
 
 from fusionbrain_sdk_python.abstract_client import AsyncClientProtocol
 from fusionbrain_sdk_python.exceptions import ConfigError
@@ -21,6 +22,8 @@ from fusionbrain_sdk_python.models import (
     RunPipelineResult,
     Style,
 )
+
+load_dotenv()
 
 
 class AsyncFBClient(AsyncClientProtocol):
