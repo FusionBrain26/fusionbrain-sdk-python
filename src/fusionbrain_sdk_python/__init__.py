@@ -3,7 +3,13 @@
 This SDK provides a client for the FusionBrain API.
 """
 
-__version__ = '0.1.2'
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _get_version
+
+try:
+    __version__ = _get_version('fusionbrain-sdk-python')
+except PackageNotFoundError:
+    __version__ = '0.0.0'
 
 from fusionbrain_sdk_python.async_client import AsyncFBClient
 from fusionbrain_sdk_python.client import FBClient

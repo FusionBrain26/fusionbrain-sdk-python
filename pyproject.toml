@@ -10,7 +10,7 @@ classifiers = [
 ]
 license = { file = "LICENSE" }
 name = "fusionbrain-sdk-python"
-version = "0.1.2"
+dynamic = ["version"]
 description = "SDK for FusionBrainAI API"
 readme = "README.md"
 authors = [
@@ -27,8 +27,11 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [dependency-groups]
 dev = [
@@ -45,3 +48,7 @@ dev = [
     "ruff>=0.11.12",
     "types-requests>=2.32.0.20250602",
 ]
+
+[project.urls]
+Homepage = "https://github.com/FusionBrain26/fusionbrain-sdk-python"
+Tracker = "https://github.com/FusionBrain26/fusionbrain-sdk-python/issues"
