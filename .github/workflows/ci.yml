@@ -14,6 +14,14 @@ on:
         description: 'Release tag to build from (e.g., v0.1.0)'
         required: true
         type: string
+      repository:
+        description: 'Publish target index (pypi or testpypi)'
+        required: false
+        default: 'pypi'
+        type: choice
+        options:
+          - pypi
+          - testpypi
 
 permissions:
   contents: read
@@ -166,7 +174,17 @@ jobs:
           name: dist-artifacts
           path: dist
 
+      - name: Publish to TestPyPI
+        if: ${{ inputs.repository == 'testpypi' }}
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          packages-dir: dist
+          skip-existing: true
+
       - name: Publish to PyPI
+        if: ${{ inputs.repository == 'pypi' }}
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
