@@ -119,10 +119,10 @@ jobs:
         shell: bash
         run: |
           echo "Ref: ${GITHUB_REF}"
-          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev0$ ]]; then
-            echo "Tag matches allowed release patterns"
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev[0-9]+$ ]]; then
+            echo "Tag matches allowed release patterns (vX.Y.Z or vX.Y.Z.devK)"
           else
-            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.dev0" >&2
+            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.devK" >&2
             exit 1
           fi
 
@@ -165,11 +165,11 @@ jobs:
           if [[ "${ref}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "is_pypi=true" >> "$GITHUB_OUTPUT"
             echo "is_testpypi=false" >> "$GITHUB_OUTPUT"
-          elif [[ "${ref}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev0$ ]]; then
+          elif [[ "${ref}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev[0-9]+$ ]]; then
             echo "is_pypi=false" >> "$GITHUB_OUTPUT"
             echo "is_testpypi=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.dev0" >&2
+            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.devK" >&2
             exit 1
           fi
 
@@ -179,7 +179,7 @@ jobs:
           name: dist-artifacts
           path: dist
 
-      - name: Publish to TestPyPI (vX.Y.Z.dev0)
+      - name: Publish to TestPyPI (vX.Y.Z.devK)
         if: ${{ steps.classify.outputs.is_testpypi == 'true' }}
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
