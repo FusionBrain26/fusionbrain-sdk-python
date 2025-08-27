@@ -4,24 +4,10 @@ on:
   push:
     branches:
       - '**'
-    tags-ignore:
+    tags:
       - 'v*'
   pull_request:
-    branches: [ master, main ]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag to build from (e.g., v0.1.0)'
-        required: true
-        type: string
-      repository:
-        description: 'Publish target index (pypi or testpypi)'
-        required: false
-        default: 'pypi'
-        type: choice
-        options:
-          - pypi
-          - testpypi
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -62,10 +48,11 @@ jobs:
           mypy src
 
   tests:
+    needs: [ruff, mypy]
     runs-on: ubuntu-latest
-    environment: "tests"
+    environment: tests
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         python-version: [ '3.10', '3.11', '3.12', '3.13' ]
     steps:
@@ -96,10 +83,11 @@ jobs:
           verbose: true
 
   integration-tests:
+    needs: [tests]
     runs-on: ubuntu-latest
-    environment: "tests"
+    environment: tests
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         python-version: [ '3.10' ]
     env:
@@ -119,24 +107,22 @@ jobs:
           pytest -m int -v
 
   build:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [integration-tests]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
           fetch-depth: 0
 
-      - name: Verify tag exists and format
+      - name: Verify tag matches allowed patterns
         shell: bash
         run: |
-          if [[ ! "${{ inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
-            echo "Tag must start with v and follow semver, e.g. v1.2.3" >&2
-            exit 1
-          fi
-          git fetch --tags --quiet
-          if ! git rev-parse -q --verify "refs/tags/${{ inputs.tag }}" >/dev/null; then
-            echo "Tag ${{ inputs.tag }} not found in repository" >&2
+          echo "Ref: ${GITHUB_REF}"
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev0$ ]]; then
+            echo "Tag matches allowed release patterns"
+          else
+            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.dev0" >&2
             exit 1
           fi
 
@@ -159,8 +145,8 @@ jobs:
           retention-days: 7
 
   publish:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -168,8 +154,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
           fetch-depth: 0
+
+      - name: Classify tag for publishing
+        id: classify
+        shell: bash
+        run: |
+          ref="${GITHUB_REF}"
+          echo "ref=${ref}"
+          if [[ "${ref}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is_pypi=true" >> "$GITHUB_OUTPUT"
+            echo "is_testpypi=false" >> "$GITHUB_OUTPUT"
+          elif [[ "${ref}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+\.dev0$ ]]; then
+            echo "is_pypi=false" >> "$GITHUB_OUTPUT"
+            echo "is_testpypi=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag must be exactly vX.Y.Z or vX.Y.Z.dev0" >&2
+            exit 1
+          fi
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v4
@@ -177,19 +179,17 @@ jobs:
           name: dist-artifacts
           path: dist
 
-      - name: Publish to TestPyPI
-        if: ${{ inputs.repository == 'testpypi' }}
+      - name: Publish to TestPyPI (vX.Y.Z.dev0)
+        if: ${{ steps.classify.outputs.is_testpypi == 'true' }}
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           packages-dir: dist
           skip-existing: true
 
-      - name: Publish to PyPI
-        if: ${{ inputs.repository == 'pypi' }}
+      - name: Publish to PyPI (vX.Y.Z)
+        if: ${{ steps.classify.outputs.is_pypi == 'true' }}
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist
           skip-existing: true
